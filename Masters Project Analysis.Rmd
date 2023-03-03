@@ -1,0 +1,458 @@
+---
+title: "Analysis"
+author: "Eddie Kingston"
+date: "2/8/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+ep1_day0_graph <- graph.adjacency(ep1_day0)
+V(ep1_day0_graph)$indegree   <- igraph::degree(ep1_day0_graph, mode = "in")
+V(ep1_day0_graph)$outdegree  <- igraph::degree(ep1_day0_graph, mode = "out")
+V(ep1_day0_graph)$degree <- igraph::degree(ep1_day0_graph, mode = "total")
+V(ep1_day0_graph)$closeness  <- igraph::closeness(ep1_day0_graph, mode = "total")
+V(ep1_day0_graph)$betweeness <- igraph::betweenness(ep1_day0_graph, normalized = TRUE)
+stats <- as_data_frame(ep1_day0_graph, what = "vertices")
+stats_degree <- with(stats, {
+ cbind(
+   indegree   = quantile(indegree, c(.025, .5, .975), na.rm = TRUE),
+   outdegree  = quantile(outdegree, c(.025, .5, .975), na.rm = TRUE),
+   degree     = quantile(degree, c(.025, .5, .975), na.rm = TRUE),
+   closeness  = quantile(closeness, c(.025, .5, .975), na.rm = TRUE),
+   betweeness = quantile(betweeness, c(.025, .5, .975), na.rm = TRUE)
+ )
+})
+stats_degree
+```
+
+
+```{r}
+stats_merge <- function(g) {
+  g <- graph.adjacency(g)
+  cbind(
+    degree = igraph::degree(g),
+    vertex_density = igraph::degree(g)/(2*length(V(g))-2),
+    vertex_betweenness = igraph::betweenness(g),
+    reciprocity = reciprocity(g)
+  )
+}
+```
+
+
+```{r}
+(ep1_day0_stats <- stats_merge(ep1_day0))
+```
+```{r}
+(ep1_day1_stats <- stats_merge(ep1_day1))
+```
+
+
+```{r}
+un <- function(g,m) {
+  g <- graph_from_adjacency_matrix(g)
+  m <- graph_from_adjacency_matrix(m)
+  union <- union(g,m)
+  un <- union(union,graph_from_adjacency_matrix(ep1_day1))
+  u_mat <- as_adjacency_matrix(un)
+  row_order <- sort(rownames(u_mat))
+  col_order <- sort(colnames(u_mat))
+  u_mat <- u_mat[row_order,col_order]
+  un <- graph.adjacency(u_mat)
+}
+stats_tribes <- function(un) {
+  cbind(
+    degree = igraph::degree(un),
+    vertex_density = igraph::degree(un)/(2*length(V(un))-2),
+    vertex_betweenness = igraph::betweenness(un),
+    reciprocity = reciprocity(un)
+  )
+}
+(ep1_day1_tribes <- stats_tribes(un(ep1_day1_g1,ep1_day1_m1)))
+```
+```{r}
+(ep1_day2_stats <- stats_tribes(un(ep1_day2_g1,ep1_day2_m1)))
+```
+
+```{r}
+(ep1_day3_stats <- stats_tribes(un(ep1_day3_g1,ep1_day3_m1)))
+```
+
+```{r}
+ep2_day4_stats <- stats_tribes(un(ep2_day4_g1,ep2_day4_m1))
+(ep2_day4_stats <- ep2_day4_stats[-2,]) # Coco voted out
+```
+
+```{r}
+ep2_day7_stats <- stats_tribes(un(ep2_day7_g1,ep2_day7_m1))
+(ep2_day7_stats <- ep2_day7_stats[-2,])
+```
+
+```{r}
+ep3_day9_stats <- stats_tribes(un(ep3_day9_g1,ep3_day9_m1))
+(ep3_day9_stats <- ep3_day9_stats[-c(2,7),])
+```
+
+```{r}
+ep3_day10_stats <- stats_tribes(un(ep3_day10_g1, ep3_day10_m1))
+(ep3_day10_stats <- ep3_day10_stats[-c(2,7),])
+```
+
+```{r}
+ep4_day10_stats <- stats_tribes(un(ep4_day10_g2,ep4_day10_m2))
+(ep4_day10_stats <- ep4_day10_stats[-c(2,7,11),])
+```
+
+```{r}
+ep5_day13_stats <- stats_tribes(un(ep5_day13_g2,ep5_day13_m2))
+(ep5_day13_stats <- ep5_day13_stats[-c(2,6,7,11),])
+```
+
+```{r}
+ep6_day14_stats <- stats_tribes(un(ep6_day14_g2,ep6_day14_m2))
+(ep6_day14_stats <- ep6_day14_stats[-c(2,6,7,9,11),])
+```
+
+```{r}
+(ep7_day16_stats <- stats_merge(ep7_day16))
+```
+
+```{r}
+(ep8_day19_stats <- stats_merge(ep8_day19))
+```
+
+```{r}
+(ep9_day21_stats <- stats_merge(ep9_day21))
+```
+
+```{r}
+(ep9_day22_stats <- stats_merge(ep9_day22))
+```
+
+```{r}
+(ep9_day23_stats <- stats_merge(ep9_day23))
+```
+
+```{r}
+(ep9_day24_stats <- stats_merge(ep9_day24))
+```
+
+```{r}
+(ep10_day26_stats <- stats_merge(ep10_day26))
+```
+
+```{r}
+(finale_day27_stats <- stats_merge(finale_day27))
+```
+```{r}
+(finale_day28_stats <- stats_merge(finale_day28))
+```
+
+```{r}
+sort(ep1_day3_stats[,2])
+```
+
+```{r}
+sort(ep2_day7_stats[,2])
+```
+
+```{r}
+sort(ep3_day10_stats[,2])
+```
+
+```{r}
+sort(ep4_day10_stats[,2])
+```
+
+```{r}
+sort(ep5_day13_stats[,2])
+```
+
+```{r}
+sort(ep6_day14_stats[,2])
+```
+
+```{r}
+sort(ep7_day16_stats[,2])
+```
+
+```{r}
+sort(ep8_day19_stats[,2])
+```
+
+```{r}
+sort(ep9_day22_stats[,2]) # Ep 9_1
+```
+```{r}
+sort(ep9_day23_stats[,2]) # Ep 9_2
+```
+
+
+```{r}
+sort(ep9_day24_stats[,2]) # Ep 10
+```
+
+```{r}
+sort(ep10_day26_stats[,2]) # Ep 11
+```
+
+```{r}
+sort(finale_day27_stats[,2])
+```
+
+
+```{r}
+order <- c("Megan O", "CT", "Neb", "Mark", "Lisa", "Clown", "Mel", "Zach", "Dio", "Denver", "Zanny", "Liz", "Jacob", "Megan", "Josh", "Coco")
+eps <- c("Ep 1", "Ep 2", "Ep 3", "Ep 4", "Ep 5", "Ep 6","Ep 7", "Ep 8", "Ep 9_1", "Ep 9_2", "Ep10", "Ep11_1", "Ep11_2", "f1", "f2", "f3")
+vert_dens_ranks <- matrix(0,16,16,dimnames=list(order, eps))
+vert_dens_ranks[1,] <- c(10,6,7,11,7,6,1,2,4,1,1,1,1,rep(NA,3)) # Megan O
+vert_dens_ranks[2,] <- c(4,5,3,3,2,3,6,4,1,1,1,1,1,rep(NA,3)) # CT 
+vert_dens_ranks[3,] <- c(7,6,7,10,8,6,5,4,2,1,3,1,1,rep(NA,3))  # Neb
+vert_dens_ranks[4,] <- c(12,12,13,13,12,10,10,8,8,4,4,4,4,rep(NA,3)) # Mark
+vert_dens_ranks[5,] <- c(1,1,1,1,1,1,1,1,5,4,5,4,rep(NA,4)) # Lisa
+vert_dens_ranks[6,] <- c(7,8,4,5,5,5,9,8,7,7,3,rep(NA,5)) # Clown
+vert_dens_ranks[7,] <- c(11,10,11,7,8,9,6,6,5,4,rep(NA,6)) # Mel
+vert_dens_ranks[8,] <- c(2,2,2,1,2,2,1,2,3,rep(NA,7))  # Zach
+vert_dens_ranks[9,] <- c(7,10,9,4,4,3,6,6,rep(NA,8))  # Dio
+vert_dens_ranks[10,] <- c(4,3,4,7,8,6,1,rep(NA,9)) # Denver
+vert_dens_ranks[11,] <- c(14,12,13,12,8,11,rep(NA,10)) # Zanny
+vert_dens_ranks[12,] <- c(6,8,9,5,5,rep(NA,11)) # Liz
+vert_dens_ranks[13,] <- c(2,3,4,7,rep(NA,12)) # Jacob
+vert_dens_ranks[14,] <- c(13,14,12,rep(NA,13))  # Megan
+vert_dens_ranks[15,] <- c(15,15,rep(NA,14)) # Josh
+vert_dens_ranks[16,] <- c(15,rep(NA,15)) # Coco
+vert_dens_df <- data.frame(
+  cast = sort(rep(cast,16)),
+  eps = rep(eps,16)
+)
+vert_dens_df <- vert_dens_df %>% mutate(
+  ranks = c(vert_dens_ranks["Clown",],vert_dens_ranks["Coco",],vert_dens_ranks["CT",],vert_dens_ranks["Denver",],vert_dens_ranks["Dio",],vert_dens_ranks["Jacob",],vert_dens_ranks["Josh",],vert_dens_ranks["Lisa",],vert_dens_ranks["Liz",],vert_dens_ranks["Mark",],vert_dens_ranks["Megan",],vert_dens_ranks["Megan O",],vert_dens_ranks["Mel",],vert_dens_ranks["Neb",],vert_dens_ranks["Zach",],vert_dens_ranks["Zanny",])
+)
+```
+
+```{r}
+ggplot(vert_dens_df, aes(x=eps,y=ranks, group = cast)) + geom_line(aes(color = cast)) + scale_y_reverse() + ggtitle("Average Vertex Densities of Cast Per Episode") + xlab("Episodes") + ylab("Ranks") + theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+```
+
+
+```{r}
+sort(ep1_day3_stats[,3])
+```
+
+```{r}
+sort(ep2_day7_stats[,3])
+```
+
+```{r}
+sort(ep3_day10_stats[,3])
+```
+
+```{r}
+sort(ep4_day10_stats[,3])
+```
+
+```{r}
+sort(ep5_day13_stats[,3])
+```
+
+```{r}
+sort(ep6_day14_stats[,3])
+```
+
+```{r}
+sort(ep7_day16_stats[,3])
+```
+
+```{r}
+sort(ep8_day19_stats[,3])
+```
+
+```{r}
+sort(ep9_day22_stats[,3])
+```
+
+
+```{r}
+sort(ep9_day23_stats[,3])
+```
+
+```{r}
+sort(ep9_day24_stats[,3])
+```
+
+```{r}
+sort(ep10_day26_stats[,3])
+```
+
+```{r}
+sort(finale_day27_stats[,3])
+```
+
+```{r}
+sort(finale_day28_stats[,3])
+```
+
+```{r}
+ggplot(vert_dens_df, aes(x=eps,y=densities, group = cast)) + geom_line(aes(color = cast)) + ggtitle("Vertex Densities of Cast Per Episode") + xlab("Episodes") + ylab("Densities")
+```
+
+```{r}
+ggplot(betweenness_df, aes(x=eps,y=betweenness, group = cast)) + geom_line(aes(color = cast)) + ggtitle("Vertex Betweenness of Cast Per Episode") + xlab("Episodes") + ylab("Vertex Betweenness")
+```
+
+```{r}
+clust_opt_tribes <- function(g,m) {
+  g <- graph_from_adjacency_matrix(g)
+  m <- graph_from_adjacency_matrix(m)
+  old_union <- union(g,m)
+  new_union <- union(old_union,graph_from_adjacency_matrix(ep1_day1))
+  clust <- cluster_optimal(old_union)
+  plot(clust,old_union)
+  print(clust)
+}
+clust_opt_tribes(ep1_day3_g1,ep1_day3_m1)
+```
+Interesting thing to note here: does almost a perfect job at capturing tribes, except for having Coco being a part of Makassan instead of Gurundji
+```{r}
+clust_opt_tribes(ep6_day14_g2,ep6_day14_m2)
+```
+
+
+```{r}
+clust_opt_merge <- function(g) {
+  g <- graph_from_adjacency_matrix(g)
+  un <- union(g,graph_from_adjacency_matrix(ep1_day1))
+  clust <- cluster_optimal(g)
+  plot(clust,g)
+  print(clust)
+}
+clust_opt_merge(ep7_day16)
+```
+Captures the people who were in Makassan 1.0 and Gurundji 2.0, and ropes Clown in with them.
+Another interesting thing to note: very small modularity here.
+
+```{r}
+clust_opt_merge(ep8_day19)
+```
+
+```{r, include = FALSE}
+clust_mods <- c(modularity(clust_opt_tribes(ep1_day3_g1,ep1_day3_m1)),modularity(clust_opt_tribes(ep2_day7_g1,ep2_day7_m1)),modularity(clust_opt_tribes(ep3_day10_g1,ep3_day10_m1)),modularity(clust_opt_tribes(ep4_day10_g2,ep4_day10_m2)),modularity(clust_opt_tribes(ep5_day13_g2,ep5_day13_m2)),modularity(clust_opt_tribes(ep6_day14_g2,ep6_day14_m2)),modularity(clust_opt_merge(ep7_day16)),modularity(clust_opt_merge(ep8_day19)), modularity(clust_opt_merge(ep9_day23)),modularity(clust_opt_merge(ep9_day24)),modularity(clust_opt_merge(ep10_day26)),modularity(clust_opt_merge(finale_day27)),modularity(clust_opt_merge(finale_day28)))
+# Add in the rest of the graphs - trying to see if any of these results have more than 3 groups
+```
+
+```{r}
+which.max(clust_mods) # Episode 2
+clust_opt_tribes(ep2_day7_g1,ep2_day7_m1)
+```
+This clustering splits the tribes perfectly. The only reason the modularity is so high is because the people within each cluster were only allowed to talk with each other, so this doesn't give us much of anything insightful.
+
+```{r}
+which.min(clust_opts)
+```
+```{r}
+clust_opt_merge(ep9_day24) # Episode 10
+```
+For all intents and purposes, this modularity is basically 0. This means the edge distributions might as well have been random.
+
+```{r}
+mod_df <- data.frame(
+  eps = eps,
+  mods = c(clust_mods,rep(NA,3))
+)
+ggplot(mod_df,aes(x=eps,y=mods)) + geom_point(fill="blue") + geom_path(color="blue") + ggtitle("Modularities of networks across episodes") + xlab("Episodes") + ylab("Modularities") + theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+```
+Modularities take a big hit right around the merge, almost certainly due to the lack of tribe structures.
+
+
+```{r}
+clust_opt_merge(ep1_day0)
+clust_opt_tribes(ep1_day1_g1,ep1_day1_m1)
+clust_opt_tribes(ep2_day7_g1,ep2_day7_m1)
+clust_opt_tribes(ep3_day10_g1,ep3_day10_m1)
+clust_opt_tribes(ep4_day10_g2,ep4_day10_m2)
+clust_opt_tribes(ep5_day13_g2,ep5_day13_m2)
+clust_opt_tribes(ep6_day14_g2,ep6_day14_m2)
+clust_opt_merge(ep7_day16)
+clust_opt_merge(ep8_day19)
+clust_opt_merge(ep9_day22)
+clust_opt_merge(ep9_day23)
+clust_opt_merge(ep9_day24)
+clust_opt_merge(ep10_day26)
+clust_opt_merge(finale_day27)
+clust_opt_merge(finale_day28)
+```
+
+
+```{r}
+clust_edge_tribes <- function(g,m) {
+  g <- graph_from_adjacency_matrix(g)
+  m <- graph_from_adjacency_matrix(m)
+  old_union <- union(g,m)
+  clust <- cluster_edge_betweenness(old_union)
+  plot(clust,old_union)
+}
+clust_edge_merge <- function(g) {
+  g <- graph_from_adjacency_matrix(g)
+  un <- union(g,graph_from_adjacency_matrix(ep1_day1))
+  clust <- cluster_edge_betweenness(g)
+  plot(clust,g)
+}
+```
+
+
+```{r}
+clust_edge_merge(ep1_day0)
+clust_edge_tribes(ep1_day1_g1,ep1_day1_m1)
+clust_edge_tribes(ep2_day7_g1,ep2_day7_m1)
+clust_edge_tribes(ep3_day10_g1,ep3_day10_m1)
+clust_edge_tribes(ep4_day10_g2,ep4_day10_m2)
+clust_edge_tribes(ep5_day13_g2,ep5_day13_m2)
+clust_edge_tribes(ep6_day14_g2,ep6_day14_m2)
+clust_edge_merge(ep7_day16)
+clust_edge_merge(ep8_day19)
+clust_edge_merge(ep9_day22)
+clust_edge_merge(ep9_day23)
+clust_edge_merge(ep9_day24)
+clust_edge_merge(ep10_day26)
+clust_edge_merge(finale_day27)
+clust_edge_merge(finale_day28)
+```
+
+```{r}
+clust_eig_tribes <- function(g,m) {
+  g <- graph_from_adjacency_matrix(g)
+  m <- graph_from_adjacency_matrix(m)
+  old_union <- union(g,m)
+  clust <- cluster_leading_eigen(old_union)
+  plot(clust,old_union)
+}
+clust_eig_merge <- function(g) {
+  g <- graph_from_adjacency_matrix(g)
+  un <- union(g,graph_from_adjacency_matrix(ep1_day1))
+  clust <- cluster_leading_eigen(g)
+  plot(clust,g)
+}
+```
+
+```{r}
+clust_eig_merge(ep1_day0)
+clust_eig_tribes(ep1_day1_g1,ep1_day1_m1)
+clust_eig_tribes(ep2_day7_g1,ep2_day7_m1)
+clust_eig_tribes(ep3_day10_g1,ep3_day10_m1)
+clust_eig_tribes(ep4_day10_g2,ep4_day10_m2)
+clust_eig_tribes(ep5_day13_g2,ep5_day13_m2)
+clust_eig_tribes(ep6_day14_g2,ep6_day14_m2)
+clust_eig_merge(ep7_day16)
+clust_eig_merge(ep8_day19)
+clust_eig_merge(ep9_day22)
+clust_eig_merge(ep9_day23)
+clust_eig_merge(ep9_day24)
+clust_eig_merge(ep10_day26)
+clust_eig_merge(finale_day27)
+clust_eig_merge(finale_day28)
+```
+
+

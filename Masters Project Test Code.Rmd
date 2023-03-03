@@ -1,0 +1,332 @@
+---
+title: "test code"
+author: "Eddie Kingston"
+date: "1/30/2023"
+output: pdf_document
+---
+
+```{r}
+plot_net_tribes <- function(g, m) { # Plot both tribes together during the premerge phase
+  g <- graph_from_adjacency_matrix(g) # convert Gurundji matrix to graph
+  m <- graph_from_adjacency_matrix(m) # convert Makassan matrix to graph
+  for (i in 1:length(V(igraph::union(g,m))$name)) {
+   if (V(igraph::union(g,m))$name[i] %in% cast_g1) {
+     V(igraph::union(g,m))$color[i] <- "red"
+     }
+    else { 
+      V(igraph::union(g,m))$color[i] <- "green" 
+      }
+    } #color vertices red if part of Gurundji, green if part of Makassan
+  V(igraph::union(g,m))$color <- remove.na(V(igraph::union(g,m))$color)
+  plot(igraph::union(g,m),vertex.size=27, edge.arrow.size=0.5, layout = layout(igraph::union(g,m)))
+}
+plot_net_tribes(ep1_day1_g1,ep1_day1_g1)
+```
+
+
+```{r}
+ep1_day1_g1 <- graph_from_adjacency_matrix(ep1_day1_g1)
+ep1_day1_m1 <- graph_from_adjacency_matrix(ep1_day1_m1)
+```
+
+```{r}
+un_mat <- as_adjacency_matrix(ep1_day1_g1 %u% ep1_day1_m1, sparse = F)
+```
+
+```{r}
+ep1_day1_g1 <- as_adjacency_matrix(ep1_day1_g1, sparse = F)
+ep1_day1_m1 <- as_adjacency_matrix(ep1_day1_m1, sparse = F)
+un_graph <- graph_from_adjacency_matrix(un_mat) 
+```
+
+
+```{r}
+vertex_attr(ep1_day1_g1)
+```
+
+```{r}
+ep1_day1.5 <- union(ep1_day1_g1,ep1_day1_m1)
+V(ep1_day1.5)$color <- rep(0,length(V(ep1_day1.5)$name))
+for (i in 1:length(V(ep1_day1.5)$color)) {
+  ifelse(V(ep1_day1.5)$name[i] %in% cast_g1, V(ep1_day1.5)$color[i] <- "red", V(ep1_day1.5)$color[i] <- "green")
+}
+plot(ep1_day1.5)
+```
+
+```{r}
+g <- matrix(0,nrow=4,ncol=4,dimnames=list(c("a","b","c","d"),c("a","b","c","d")))
+g
+```
+
+```{r}
+# g <- as_adjacency_matrix(g)
+g[1,2] <- 1
+g[2,c(1,3)] <- 1
+g[3,c(1,2)] <- 1
+```
+
+```{r}
+g <- graph_from_adjacency_matrix(g)
+plot(g,vertex.size=27, edge.arrow.size=0.5, layout = layout(g))
+```
+```{r}
+cast <- c("a","b","c","d")
+ally1 <- c("a|b", "b|a")
+ally2 <- c("b|c","c|b")
+ally <- as.matrix(c(ally1,ally2))
+plot(g)
+```
+
+```{r}
+# Sort through the cast and sort through alliance. For each other column, if there is an edge between them AND
+# they're both in an alliance together, color the edge green. Otherwise color it orange.
+E(g)$color <- "grey50"
+for (i in 1:length(E(g))) {
+  ifelse(attr(E(g),"vnames")[i] %in% ally, E(g)$color[i] <- "green", E(g)$color[i] <- rgb(1,0,0,0.3))
+}
+plot(g)
+```
+
+```{r}
+row_order <- sort(rownames(un_mat))
+col_order <- sort(colnames(un_mat))
+un_mat <- un_mat[row_order,col_order]
+un_graph <- graph_from_adjacency_matrix(un_mat)
+plot(un_graph)
+```
+```{r}
+ep1_day1 <- ep1_day0
+ep1_day1 <- ep1_day1[-2,-2] # Coco
+ep1_day1 <- ep1_day1[-6,-6] # Josh
+ep1_day1 <- ep1_day1[-9,-9] # Megan
+ep1_day1 <- ep1_day1[-5,-5] # Jacob
+ep1_day1 <- ep1_day1[-6,-6] # Liz
+ep1_day1 <- ep1_day1[-11,-11] # Zanny
+ep1_day1 <- ep1_day1[-3,-3] # Denver
+ep1_day1 <- ep1_day1[-3,-3] # Dio
+```
+
+Alliance list:
+1: Denver, Megan O, Mel (Made Ep 1 Day 3, dissolved at start of Ep 8)
+2: Denver, Megan O, Mel, Zanny (Made Ep 2 Day 7, became (1) at s)
+3: Denver, Megan O, Mel, Neb, Zach (Made Ep 2 Day 7 at )
+4: Clown, Denver, Dio
+5: Clown, Dio, Liz
+6: CT, Lisa, Mel, Zach
+7: Clown, Dio, Liz, Mark
+8: Denver, Dio, Neb
+--MERGE--
+9: Denver, Dio, Megan O
+10: CT, Lisa, Zach
+11: Clown, Denver, Dio, Megan O
+12: Clown, Mark, Neb
+13: CT, Mark, Neb
+14: Clown, CT, Mark, Neb
+15: Clown, CT, Mark, Megan O
+16: Clown, CT, Neb
+17: CT, Megan O, Neb
+
+1 c 2
+1 c 3
+5 c 7
+10 c 6
+4 c 11
+12 c 14
+13 c 14
+16 c 14
+12 U 13 U 16 = 14
+
+Clown -> CT, Denver, Dio, Liz, Mark, Megan O, Neb 
+CT -> Clown, Lisa, Mark, Megan O, Mel, Neb, Zach 
+Denver -> Clown, Dio, Megan O, Mel, Neb, Zach, Zanny
+Dio -> Denver, Liz, Mark, Megan O, Neb 
+Lisa -> CT, Mel, Zach 
+Liz -> Clown, Dio, Mark
+Mark -> Clown, Dio, Liz, Megan O, Neb
+Megan O -> Clown, CT, Denver, Dio, Mark, Mel, Neb, Zach, Zanny
+Mel -> CT, Denver, Lisa, Megan O, Neb, Zach, Zanny
+Neb -> Clown, CT, Denver, Dio, Mark, Megan O, Mel, Zach
+Zach -> CT, Denver, Lisa, Megan O, Mel, Neb
+Zanny -> Denver, Megan O, Mel
+```{r}
+ep6_day14_m2 <- as_adjacency_matrix(delete_vertices(graph_from_adjacency_matrix(ep6_day14_m2),"Zanny"))
+ep7_day16 <- as_adjacency_matrix(graph_from_adjacency_matrix(ep6_day14_g2) %u% graph_from_adjacency_matrix(ep6_day14_m2))
+ep7_day16 <- ep7_day16[sort(rownames(ep7_day16)),sort(colnames(ep7_day16))]
+```
+
+
+```{r}
+density <- matrix(NA,16,16,dimnames=list(cast,eps))
+dens <- function(c,epstats) {
+  for (i in cast) {
+  if (i %in% rownames(epstats)) {
+    density[i,c] <- epstats[i,2]
+  }
+  }
+}
+dens(1,ep1_day3_stats)
+```
+
+```{r}
+density <- matrix(NA,16,16,dimnames=list(cast,eps))
+for (i in cast) {
+if (i %in% rownames(ep1_day3_stats)) {
+  density[i,1] <- ep1_day3_stats[i,2]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep2_day7_stats)) {
+  density[i,2] <- ep2_day7_stats[i,2]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep3_day10_stats)) {
+  density[i,3] <- ep3_day10_stats[i,2]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep4_day10_stats)) {
+  density[i,4] <- ep4_day10_stats[i,2]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep5_day13_stats)) {
+  density[i,5] <- ep5_day13_stats[i,2]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep6_day14_stats)) {
+  density[i,6] <- ep6_day14_stats[i,2]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep7_day16_stats)) {
+  density[i,7] <- ep7_day16_stats[i,2]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep8_day19_stats)) {
+  density[i,8] <- ep4_day10_stats[i,2]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep9_day22_stats)) {
+  density[i,9] <- ep9_day22_stats[i,2]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep9_day23_stats)) {
+  density[i,10] <- ep9_day23_stats[i,2]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep9_day24_stats)) {
+  density[i,11] <- ep4_day10_stats[i,2]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep10_day26_stats)) {
+  density[i,12] <- ep10_day26_stats[i,2]
+}
+}
+for (i in cast) {
+if (i %in% rownames(finale_day27_stats)) {
+  density[i,13] <- finale_day27_stats[i,2]
+}
+}
+density
+```
+
+```{r}
+vert_dens_df <- data.frame(
+  cast = sort(rep(cast,16)),
+  eps = rep(eps,16)
+)
+vert_dens_df <- vert_dens_df %>% mutate(
+  densities = c(density["Clown",],density["Coco",],density["CT",],density["Denver",],density["Dio",],density["Jacob",],density["Josh",],density["Lisa",],density["Liz",],density["Mark",],density["Megan",],density["Megan O",],density["Mel",],density["Neb",],density["Zach",],density["Zanny",])
+)
+ggplot(vert_dens_df, aes(x=eps,y=densities, group = cast)) + geom_line(aes(color = cast)) + ggtitle("Vertex Densities of Cast Per Episode") + xlab("Episodes") + ylab("Densities") + theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+```
+
+```{r}
+between <- matrix(NA,16,16,dimnames=list(cast,eps))
+for (i in cast) {
+if (i %in% rownames(ep1_day3_stats)) {
+  between[i,1] <- ep1_day3_stats[i,3]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep2_day7_stats)) {
+  between[i,2] <- ep2_day7_stats[i,3]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep3_day10_stats)) {
+  between[i,3] <- ep3_day10_stats[i,3]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep4_day10_stats)) {
+  between[i,4] <- ep4_day10_stats[i,3]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep5_day13_stats)) {
+  between[i,5] <- ep5_day13_stats[i,3]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep6_day14_stats)) {
+  between[i,6] <- ep6_day14_stats[i,3]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep7_day16_stats)) {
+  between[i,7] <- ep7_day16_stats[i,3]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep8_day19_stats)) {
+  between[i,8] <- ep4_day10_stats[i,3]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep9_day22_stats)) {
+  between[i,9] <- ep9_day22_stats[i,3]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep9_day23_stats)) {
+  between[i,10] <- ep9_day23_stats[i,3]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep9_day24_stats)) {
+  between[i,11] <- ep4_day10_stats[i,3]
+}
+}
+for (i in cast) {
+if (i %in% rownames(ep10_day26_stats)) {
+  between[i,12] <- ep10_day26_stats[i,3]
+}
+}
+for (i in cast) {
+if (i %in% rownames(finale_day27_stats)) {
+  between[i,13] <- finale_day27_stats[i,3]
+}
+}
+between
+```
+
+```{r}
+betweenness_df <- data.frame(
+  cast = sort(rep(cast,16)),
+  eps = rep(eps,16)
+)
+betweenness_df <- betweenness_df %>% mutate(
+  betweenness = c(between["Clown",],between["Coco",],between["CT",],between["Denver",],between["Dio",],between["Jacob",],between["Josh",],between["Lisa",],between["Liz",],between["Mark",],between["Megan",],between["Megan O",],between["Mel",],between["Neb",],between["Zach",],between["Zanny",])
+)
+ggplot(betweenness_df, aes(x=eps,y=betweenness, group = cast)) + geom_line(aes(color = cast)) + ggtitle("Vertex Betweenness of Cast Per Episode") + xlab("Episodes") + ylab("Vertex Betweenness") + theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+```
+
+
